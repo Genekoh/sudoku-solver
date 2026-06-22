@@ -1,5 +1,7 @@
 package sudoku
 
+import "math/bits"
+
 type SudokuSolver func(*Board) bool
 
 func NaiveBacktrackSolve(b *Board) bool {
@@ -126,5 +128,78 @@ func backtrack(b *Board, c *constraints) bool {
 	}
 
 	// No digit works here: backtrack.
+	return false
+}
+
+// allDigits is a bitmask with bits 1..9 set (the valid Sudoku digits).
+const allDigits uint16 = 0x3FE
+
+// BacktrackMRVSolve solves the board with backtracking guided by the Minimum
+// Remaining Values heuristic: at each step it branches on the empty cell with
+// the fewest candidates. This prunes the search far more aggressively than
+// always taking the first empty cell.
+func BacktrackMRVSolve(b *Board) bool {
+	c, ok := newConstraints(b)
+	if !ok {
+		return false
+	}
+	return backtrackMRV(b, &c)
+}
+
+func backtrackMRV(b *Board, c *constraints) bool {
+	// Find the empty cell with the fewest candidates.
+	row, col := -1, -1
+	var bestCandidates uint16
+	bestCount := 10 // more than any cell can have (max 9)
+
+search:
+	for i := range 9 {
+		for j := range 9 {
+			if b[i][j] != Empty {
+				continue
+			}
+
+			candidates := allDigits &^ (c.rows[i] | c.cols[j] | c.boxes[boxIndex(i, j)])
+			count := bits.OnesCount16(candidates)
+			if count == 0 {
+				// An empty cell with no candidates: this branch is dead.
+				return false
+			}
+			if count < bestCount {
+				bestCount, bestCandidates = count, candidates
+				row, col = i, j
+				if count == 1 {
+					break search // can't do better than a forced cell
+				}
+			}
+		}
+	}
+
+	// No empty cell remains: the board is a valid complete solution.
+	if row == -1 {
+		return true
+	}
+
+	box := boxIndex(row, col)
+	for candidates := bestCandidates; candidates != 0; {
+		bit := candidates & -candidates // lowest set bit
+		candidates &^= bit
+
+		b[row][col] = Digit(bits.TrailingZeros16(bit))
+		c.rows[row] |= bit
+		c.cols[col] |= bit
+		c.boxes[box] |= bit
+
+		if backtrackMRV(b, c) {
+			return true
+		}
+
+		b[row][col] = Empty
+		c.rows[row] &^= bit
+		c.cols[col] &^= bit
+		c.boxes[box] &^= bit
+	}
+
+	// No candidate works here: backtrack.
 	return false
 }

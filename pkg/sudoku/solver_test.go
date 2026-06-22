@@ -142,3 +142,7 @@ func TestNaiveBacktrackSolve(t *testing.T) {
 func TestBacktrackSolve(t *testing.T) {
 	runSolverTests(t, sudoku.BacktrackSolve)
 }
+
+func TestBacktrackMRVSolve(t *testing.T) {
+	runSolverTests(t, sudoku.BacktrackMRVSolve)
+}
