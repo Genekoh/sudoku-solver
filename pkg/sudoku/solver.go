@@ -8,8 +8,8 @@ func NaiveBacktrackSolve(b *Board) bool {
 	}
 
 	// Traverse to the first empty cell found
-	for i := 0; i < 9; i++ {
-		for j := 0; j < 9; j++ {
+	for i := range 9 {
+		for j := range 9 {
 			if b[i][j] != Empty {
 				continue
 			}

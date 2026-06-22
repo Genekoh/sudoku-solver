@@ -1,21 +1,18 @@
 package sudoku
 
-import (
-	"slices"
-)
-
 func isValidSudokuSet(set [9]Digit) bool {
-	seen := []Digit{}
+	// seen is a bitmask where bit d marks digit d as already present.
+	var seen uint16
 	for _, c := range set {
 		if c == Empty {
 			continue
 		}
 
-		if slices.Contains(seen, c) {
+		bit := uint16(1) << c
+		if seen&bit != 0 {
 			return false
-		} else {
-			seen = append(seen, c)
 		}
+		seen |= bit
 	}
 	return true
 }
