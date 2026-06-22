@@ -146,3 +146,32 @@ func TestBacktrackSolve(t *testing.T) {
 func TestBacktrackMRVSolve(t *testing.T) {
 	runSolverTests(t, sudoku.BacktrackMRVSolve)
 }
+
+// runSolverBenchmarks measures a solver against each puzzle in the shared set.
+// A fresh board is built per iteration (solvers mutate in place); the timer is
+// stopped during setup so only solve time is measured.
+func runSolverBenchmarks(b *testing.B, solve sudoku.SudokuSolver) {
+	for _, tc := range solverTestCases {
+		b.Run(tc.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				b.StopTimer()
+				board := sudoku.NewBoard(tc.puzzle)
+				b.StartTimer()
+
+				solve(board)
+			}
+		})
+	}
+}
+
+func BenchmarkNaiveBacktrackSolve(b *testing.B) {
+	runSolverBenchmarks(b, sudoku.NaiveBacktrackSolve)
+}
+
+func BenchmarkBacktrackSolve(b *testing.B) {
+	runSolverBenchmarks(b, sudoku.BacktrackSolve)
+}
+
+func BenchmarkBacktrackMRVSolve(b *testing.B) {
+	runSolverBenchmarks(b, sudoku.BacktrackMRVSolve)
+}
