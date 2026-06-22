@@ -116,6 +116,8 @@ func runSolverTests(t *testing.T, solve sudoku.SudokuSolver) {
 
 	for _, tc := range solverTestCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
 			b := sudoku.NewBoard(tc.puzzle)
 			solved := solve(b)
 
