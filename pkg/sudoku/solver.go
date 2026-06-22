@@ -4,7 +4,13 @@ import "math/bits"
 
 type SudokuSolver func(*Board) bool
 
+// NaiveBacktrackSolve attempts to solve b in place. It returns false when b
+// has invalid clues or no solution. On failure, b is restored to its original
+// state.
 func NaiveBacktrackSolve(b *Board) bool {
+	if !b.IsValid() {
+		return false
+	}
 	if b.IsCompleted() {
 		return true
 	}
@@ -33,7 +39,7 @@ func NaiveBacktrackSolve(b *Board) bool {
 		}
 	}
 
-	panic("Invalid Sudoku Given")
+	return false
 }
 
 // constraints tracks, as bitmasks, which digits are already used in each row,
@@ -72,9 +78,11 @@ func newConstraints(b *Board) (constraints, bool) {
 	return c, true
 }
 
-// BacktrackSolve solves the board using backtracking with incremental
-// constraint tracking. Candidate placements are validated against row/column/box
-// bitmasks in O(1), avoiding the full-board rescan the naive solver performs.
+// BacktrackSolve attempts to solve b in place using backtracking with
+// incremental constraint tracking. Candidate placements are validated against
+// row/column/box bitmasks in O(1), avoiding the full-board rescan the naive
+// solver performs. It returns false for invalid or unsolvable boards; on
+// failure, b is restored to its original state.
 func BacktrackSolve(b *Board) bool {
 	c, ok := newConstraints(b)
 	if !ok {
@@ -134,10 +142,12 @@ func backtrack(b *Board, c *constraints) bool {
 // allDigits is a bitmask with bits 1..9 set (the valid Sudoku digits).
 const allDigits uint16 = 0x3FE
 
-// BacktrackMRVSolve solves the board with backtracking guided by the Minimum
-// Remaining Values heuristic: at each step it branches on the empty cell with
-// the fewest candidates. This prunes the search far more aggressively than
-// always taking the first empty cell.
+// BacktrackMRVSolve attempts to solve b in place with backtracking guided by
+// the Minimum Remaining Values heuristic: at each step it branches on the
+// empty cell with the fewest candidates. This prunes the search far more
+// aggressively than always taking the first empty cell. It returns false for
+// invalid or unsolvable boards; on failure, b is restored to its original
+// state.
 func BacktrackMRVSolve(b *Board) bool {
 	c, ok := newConstraints(b)
 	if !ok {

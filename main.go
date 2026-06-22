@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -42,9 +43,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	raw := *boardFlag
-	if raw == "" || raw == "-" {
-		raw = chooseBoard()
+	raw, err := readBoardInput(*boardFlag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid board input: %v\n", err)
+		os.Exit(1)
 	}
 
 	board, err := parseBoard(raw)
@@ -59,7 +61,7 @@ func main() {
 	}
 
 	fmt.Printf("\nSolver: %s\n\nGiven:\n", s.name)
-	sudoku.PrintBoard(*board)
+	fmt.Println(board)
 
 	start := time.Now()
 	solved := s.fn(board)
@@ -71,7 +73,7 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("Solved in %s:\n", elapsed)
-	sudoku.PrintBoard(*board)
+	fmt.Println(board)
 }
 
 // chooseSolver interactively prompts for a solver key.
@@ -116,6 +118,22 @@ func readLine() string {
 	return ""
 }
 
+// readBoardInput returns the board supplied to -board. A dash reads all of
+// standard input; an omitted flag keeps the interactive/default-board flow.
+func readBoardInput(boardFlag string) (string, error) {
+	if boardFlag == "-" {
+		input, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			return "", fmt.Errorf("read board from standard input: %w", err)
+		}
+		return string(input), nil
+	}
+	if boardFlag == "" {
+		return chooseBoard(), nil
+	}
+	return boardFlag, nil
+}
+
 // parseBoard converts an 81-character board string into a *Board. Both '0' and
 // '.' denote empty cells; whitespace is ignored.
 func parseBoard(raw string) (*sudoku.Board, error) {
@@ -142,5 +160,5 @@ func parseBoard(raw string) (*sudoku.Board, error) {
 	for i, c := range s {
 		nums[i] = int(c - '0')
 	}
-	return sudoku.NewBoard(nums), nil
+	return sudoku.NewBoard(nums)
 }

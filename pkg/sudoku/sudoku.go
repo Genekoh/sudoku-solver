@@ -7,6 +7,9 @@ func isValidSudokuSet(set [9]Digit) bool {
 		if c == Empty {
 			continue
 		}
+		if c < One || c > Nine {
+			return false
+		}
 
 		bit := uint16(1) << c
 		if seen&bit != 0 {

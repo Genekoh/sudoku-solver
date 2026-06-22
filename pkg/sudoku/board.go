@@ -22,37 +22,49 @@ const (
 
 type Board [9][9]Digit
 
-func NewBoard(nums [81]int) *Board {
+// NewBoard constructs a board from row-major values. Every value must be in
+// the range 0 through 9, where 0 represents an empty cell.
+func NewBoard(nums [81]int) (*Board, error) {
 	var b Board
 	for i, n := range nums {
+		if n < int(Empty) || n > int(Nine) {
+			return nil, fmt.Errorf("cell %d: digit %d is outside the range 0..9", i, n)
+		}
 		b[i/9][i%9] = Digit(n)
 	}
 
-	return &b
+	return &b, nil
 }
 
-func PrintBoard(b Board) {
+// String returns a human-readable rendering of the board. Empty cells are
+// represented by x.
+func (b Board) String() string {
+	var output strings.Builder
 	for i, row := range b {
-		rowStr := ""
+		var rowStr strings.Builder
 		for j, cell := range row {
 			if j == 3 || j == 6 {
-				rowStr += " |"
+				rowStr.WriteString(" |")
 			}
 
 			if j != 0 {
-				rowStr += " "
+				rowStr.WriteByte(' ')
 			}
 			if cell != Empty {
-				rowStr += fmt.Sprintf("%d", cell)
+				fmt.Fprint(&rowStr, cell)
 			} else {
-				rowStr += "x"
+				rowStr.WriteByte('x')
 			}
 		}
 
 		if i == 3 || i == 6 {
-			line := strings.Repeat("-", len(rowStr))
-			fmt.Println(line)
+			output.WriteString(strings.Repeat("-", rowStr.Len()))
+			output.WriteByte('\n')
 		}
-		fmt.Println(rowStr)
+		output.WriteString(rowStr.String())
+		if i != len(b)-1 {
+			output.WriteByte('\n')
+		}
 	}
+	return output.String()
 }

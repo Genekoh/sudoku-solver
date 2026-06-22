@@ -116,7 +116,10 @@ func runSolverTests(t *testing.T, solve sudoku.SudokuSolver) {
 
 	for _, tc := range solverTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			b := sudoku.NewBoard(tc.puzzle)
+			b, err := sudoku.NewBoard(tc.puzzle)
+			if err != nil {
+				t.Fatalf("build test board: %v", err)
+			}
 			solved := solve(b)
 
 			if tc.solvable {
@@ -147,6 +150,41 @@ func TestBacktrackMRVSolve(t *testing.T) {
 	runSolverTests(t, sudoku.BacktrackMRVSolve)
 }
 
+func TestSolversRejectFilledInvalidBoardWithoutMutation(t *testing.T) {
+	invalid := [81]int{
+		1, 1, 3, 4, 5, 6, 7, 8, 9,
+		4, 5, 6, 7, 8, 9, 1, 2, 3,
+		7, 8, 9, 1, 2, 3, 4, 5, 6,
+		2, 3, 4, 5, 6, 7, 8, 9, 1,
+		5, 6, 7, 8, 9, 1, 2, 3, 4,
+		8, 9, 1, 2, 3, 4, 5, 6, 7,
+		3, 4, 5, 6, 7, 8, 9, 1, 2,
+		6, 7, 8, 9, 1, 2, 3, 4, 5,
+		9, 2, 5, 3, 4, 8, 6, 7, 1,
+	}
+
+	for name, solve := range map[string]sudoku.SudokuSolver{
+		"naive":     sudoku.NaiveBacktrackSolve,
+		"backtrack": sudoku.BacktrackSolve,
+		"mrv":       sudoku.BacktrackMRVSolve,
+	} {
+		t.Run(name, func(t *testing.T) {
+			board, err := sudoku.NewBoard(invalid)
+			if err != nil {
+				t.Fatalf("NewBoard: %v", err)
+			}
+			before := *board
+
+			if solve(board) {
+				t.Fatal("solver accepted a filled invalid board")
+			}
+			if *board != before {
+				t.Fatal("solver mutated board after failure")
+			}
+		})
+	}
+}
+
 // runSolverBenchmarks measures a solver against each puzzle in the shared set.
 // A fresh board is built per iteration (solvers mutate in place); the timer is
 // stopped during setup so only solve time is measured.
@@ -155,7 +193,10 @@ func runSolverBenchmarks(b *testing.B, solve sudoku.SudokuSolver) {
 		b.Run(tc.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				b.StopTimer()
-				board := sudoku.NewBoard(tc.puzzle)
+				board, err := sudoku.NewBoard(tc.puzzle)
+				if err != nil {
+					b.Fatalf("build benchmark board: %v", err)
+				}
 				b.StartTimer()
 
 				solve(board)
