@@ -22,7 +22,7 @@ func TestBacktrackSolve(t *testing.T) {
 	}
 
 	for _, b := range solve_tests {
-		solved := sudoku.BacktrackSolve(b)
+		solved := sudoku.NaiveBacktrackSolve(b)
 		if !solved || !b.IsCompleted() {
 			t.Error("Should be able to solve")
 		}

@@ -5,9 +5,11 @@ import (
 	"strings"
 )
 
+type Digit uint8
+
 const (
-	Empty int = iota
-	One       // consider just having Empty defined
+	Empty Digit = iota
+	One
 	Two
 	Three
 	Four
@@ -18,18 +20,12 @@ const (
 	Nine
 )
 
-type Cell struct {
-	Number  int
-	IsFixed bool
-}
-
-type Board [9][9]Cell
+type Board [9][9]Digit
 
 func NewBoard(nums [81]int) *Board {
 	var b Board
 	for i, n := range nums {
-		isFixed := n != 0
-		b[i/9][i%9] = Cell{n, isFixed}
+		b[i/9][i%9] = Digit(n)
 	}
 
 	return &b
@@ -46,8 +42,8 @@ func PrintBoard(b Board) {
 			if j != 0 {
 				rowStr += " "
 			}
-			if cell.Number != Empty {
-				rowStr += fmt.Sprintf("%d", cell.Number)
+			if cell != Empty {
+				rowStr += fmt.Sprintf("%d", cell)
 			} else {
 				rowStr += "x"
 			}
