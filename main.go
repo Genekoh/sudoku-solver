@@ -23,6 +23,7 @@ var solvers = map[string]solver{
 	"naive":     {"Naive backtracking", sudoku.NaiveBacktrackSolve},
 	"backtrack": {"Backtracking", sudoku.BacktrackSolve},
 	"mrv":       {"MRV backtracking", sudoku.BacktrackMRVSolve},
+	"dlx":       {"Dancing links", sudoku.DancingLinksSolve},
 }
 
 // defaultBoard is a sample puzzle used when no board is provided.
@@ -82,6 +83,7 @@ func chooseSolver() string {
 	fmt.Println("  1) naive     - Naive backtracking")
 	fmt.Println("  2) backtrack - Backtracking")
 	fmt.Println("  3) mrv       - MRV backtracking")
+	fmt.Println("  4) dlx       - Dancing links")
 	fmt.Print("> ")
 
 	switch strings.TrimSpace(readLine()) {
@@ -91,6 +93,8 @@ func chooseSolver() string {
 		return "backtrack"
 	case "3", "mrv":
 		return "mrv"
+	case "4", "dlx":
+		return "dlx"
 	default:
 		return ""
 	}

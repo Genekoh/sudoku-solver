@@ -150,6 +150,10 @@ func TestBacktrackMRVSolve(t *testing.T) {
 	runSolverTests(t, sudoku.BacktrackMRVSolve)
 }
 
+func TestDancingLinksSolve(t *testing.T) {
+	runSolverTests(t, sudoku.DancingLinksSolve)
+}
+
 func TestSolversRejectFilledInvalidBoardWithoutMutation(t *testing.T) {
 	invalid := [81]int{
 		1, 1, 3, 4, 5, 6, 7, 8, 9,
@@ -215,4 +219,8 @@ func BenchmarkBacktrackSolve(b *testing.B) {
 
 func BenchmarkBacktrackMRVSolve(b *testing.B) {
 	runSolverBenchmarks(b, sudoku.BacktrackMRVSolve)
+}
+
+func BenchmarkDancingLinksSolve(b *testing.B) {
+	runSolverBenchmarks(b, sudoku.DancingLinksSolve)
 }
