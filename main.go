@@ -15,22 +15,23 @@ import (
 // solver bundles a human-readable name with the function that solves a board
 // in place, returning true on success.
 type solver struct {
+	key  string
 	name string
 	fn   func(*sudoku.Board) bool
 }
 
-var solvers = map[string]solver{
-	"naive":     {"Naive backtracking", sudoku.NaiveBacktrackSolve},
-	"backtrack": {"Backtracking", sudoku.BacktrackSolve},
-	"mrv":       {"MRV backtracking", sudoku.BacktrackMRVSolve},
-	"dlx":       {"Dancing links", sudoku.DancingLinksSolve},
+var solvers = []solver{
+	{"naive", "Naive backtracking", sudoku.NaiveBacktrackSolve},
+	{"backtrack", "Backtracking", sudoku.BacktrackSolve},
+	{"mrv", "MRV backtracking", sudoku.BacktrackMRVSolve},
+	{"dlx", "Dancing links", sudoku.DancingLinksSolve},
 }
 
 // defaultBoard is a sample puzzle used when no board is provided.
 const defaultBoard = "210903000000071800000002006007000013600000057001000000062050000000600400304000000"
 
 func main() {
-	solverFlag := flag.String("solver", "", "solver to use: naive, backtrack, mrv")
+	solverFlag := flag.String("solver", "", fmt.Sprintf("solver to use: %s", solverChoices()))
 	boardFlag := flag.String("board", "", "starting board as 81 chars (0 or . for empty); use '-' to read from stdin")
 	flag.Parse()
 
@@ -38,9 +39,9 @@ func main() {
 	if solverKey == "" {
 		solverKey = chooseSolver()
 	}
-	s, ok := solvers[solverKey]
+	s, ok := findSolver(solverKey)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "unknown solver %q (choose from: naive, backtrack, mrv)\n", solverKey)
+		fmt.Fprintf(os.Stderr, "unknown solver %q (choose from: %s)\n", solverKey, solverChoices())
 		os.Exit(1)
 	}
 
@@ -80,24 +81,35 @@ func main() {
 // chooseSolver interactively prompts for a solver key.
 func chooseSolver() string {
 	fmt.Println("Choose a solver:")
-	fmt.Println("  1) naive     - Naive backtracking")
-	fmt.Println("  2) backtrack - Backtracking")
-	fmt.Println("  3) mrv       - MRV backtracking")
-	fmt.Println("  4) dlx       - Dancing links")
+	for i, solver := range solvers {
+		fmt.Printf("  %d) %-9s - %s\n", i+1, solver.key, solver.name)
+	}
 	fmt.Print("> ")
 
-	switch strings.TrimSpace(readLine()) {
-	case "1", "naive":
-		return "naive"
-	case "2", "backtrack":
-		return "backtrack"
-	case "3", "mrv":
-		return "mrv"
-	case "4", "dlx":
-		return "dlx"
-	default:
-		return ""
+	choice := strings.TrimSpace(readLine())
+	for i, solver := range solvers {
+		if choice == fmt.Sprint(i+1) || choice == solver.key {
+			return solver.key
+		}
 	}
+	return ""
+}
+
+func findSolver(key string) (solver, bool) {
+	for _, solver := range solvers {
+		if solver.key == key {
+			return solver, true
+		}
+	}
+	return solver{}, false
+}
+
+func solverChoices() string {
+	keys := make([]string, 0, len(solvers))
+	for _, solver := range solvers {
+		keys = append(keys, solver.key)
+	}
+	return strings.Join(keys, ", ")
 }
 
 // chooseBoard interactively prompts for a starting board, defaulting to the
